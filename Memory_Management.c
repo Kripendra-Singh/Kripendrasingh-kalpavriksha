@@ -1,8 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-
+#define MAX_SIZE 1000000
 #define INITIAL_CAPACITY 4
 
 typedef enum {
@@ -48,6 +47,7 @@ void DISPLAY_MEMORY_MAP(MemoryManager *manager);
 void DISPLAY_STATISTICS(MemoryManager *manager);
 void MENU(void);
 void ALLOCATE_OPERATION(MemoryManager *manager);
+int CHECK_EXTERNAL_FRAGMENTATION(MemoryManager *manager, size_t requestedSize);
 void RELEASE_OPERATION(MemoryManager *manager);
 void RESIZE_OPERATION(MemoryManager *manager);
 void CHANGE_STRATEGY(MemoryManager *manager);
@@ -57,10 +57,11 @@ void DESTROY(MemoryManager *manager);
 
 int READ_INTEGER(char message[]) {
     int number;
+    char extra;
 
     printf("%s", message);
 
-    if (scanf("%d", &number) != 1) {
+    if (scanf("%d%c", &number,&extra) != 2||extra!='\n') {
         printf("Invalid input.\n");
 
         while (getchar() != '\n');
@@ -108,11 +109,9 @@ int INSERT_BLOCK(MemoryManager *manager, size_t index, Block block) {
     if (index > manager->blockCount || !ENSURE_CAPACITY(manager))
         return 0;
 
-    memmove(
-        &manager->blocks[index + 1],
-        &manager->blocks[index],
-        (manager->blockCount - index) * sizeof(Block)
-    );
+    for (size_t i = manager->blockCount; i > index; i--) {
+    manager->blocks[i] = manager->blocks[i - 1];
+}
 
     manager->blocks[index] = block;
     manager->blockCount++;
@@ -125,11 +124,9 @@ void REMOVE_BLOCK(MemoryManager *manager, size_t index) {
     if (index >= manager->blockCount)
         return;
 
-    memmove(
-        &manager->blocks[index],
-        &manager->blocks[index + 1],
-        (manager->blockCount - index - 1) * sizeof(Block)
-    );
+    for (size_t i = index; i < manager->blockCount - 1; i++) {
+    manager->blocks[i] = manager->blocks[i + 1];
+}
 
     manager->blockCount--;
 }
@@ -231,7 +228,28 @@ int FIND_BLOCK(MemoryManager *manager, size_t size) {
 
     return selected;
 }
+int CHECK_EXTERNAL_FRAGMENTATION(MemoryManager *manager, size_t requestedSize) {
 
+    size_t totalFree = 0;
+    size_t largestFree = 0;
+
+    for (size_t i = 0; i < manager->blockCount; i++) {
+
+        if (manager->blocks[i].status == FREE) {
+
+            totalFree += manager->blocks[i].size;
+
+            if (manager->blocks[i].size > largestFree) {
+                largestFree = manager->blocks[i].size;
+            }
+        }
+    }
+
+    if (totalFree >= requestedSize && largestFree < requestedSize)
+        return 1;
+
+    return 0;
+}
 
 
 int ALLOCATE_MEMORY(
@@ -374,11 +392,10 @@ int RESIZE_MEMORY(
     if (newIndex == -1)
         return 0;
 
-    memcpy(
-        manager->buffer + manager->blocks[newIndex].start,
-        manager->buffer + oldStart,
-        oldSize
-    );
+   for (size_t i = 0; i < oldSize; i++) {
+    manager->buffer[manager->blocks[newIndex].start + i] =
+        manager->buffer[oldStart + i];
+}
 
     if (!RELEASE_MEMORY(manager, id))
         return 0;
@@ -493,7 +510,15 @@ void ALLOCATE_OPERATION(MemoryManager *manager) {
 
     } else {
 
-        printf("Allocation failed.\n");
+        if (size > 0 &&
+            CHECK_EXTERNAL_FRAGMENTATION(manager, (size_t)size)) {
+
+            printf("Allocation failed due to external fragmentation.\n");
+
+        } else {
+
+            printf("Allocation failed due to insufficient memory.\n");
+        }
     }
 }
 
@@ -572,7 +597,7 @@ int main(void) {
 
     int totalSize = READ_INTEGER("Enter memory pool size: ");
 
-    if (totalSize <= 0) {
+    if (totalSize <= 0 || totalSize>MAX_SIZE){
 
         printf("Invalid memory pool size.\n");
         return 1;
