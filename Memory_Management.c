@@ -1,6 +1,12 @@
+/*
+ * @Author: Kripendra Singh
+ * @Description: This program demonstrates a Smart Memory Management System.
+ */
+
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #define MAX_SIZE 1000000
 #define INITIAL_CAPACITY 4
 
@@ -32,36 +38,36 @@ typedef struct {
     Strategy strategy;
 } MemoryManager;
 
-int READ_INTEGER(char message[]);
-int ENSURE_CAPACITY(MemoryManager *manager);
-int INSERT_BLOCK(MemoryManager *manager, size_t index, Block block);
-void REMOVE_BLOCK(MemoryManager *manager, size_t index);
-void MERGE_BLOCKS(MemoryManager *manager);
-int INITIALIZE(MemoryManager *manager, size_t totalSize, Strategy strategy);
-int FIND_ALLOCATION(MemoryManager *manager, unsigned int id);
-int FIND_BLOCK(MemoryManager *manager, size_t size);
-int ALLOCATE_MEMORY(MemoryManager *manager, size_t size, unsigned int *id);
-int RELEASE_MEMORY(MemoryManager *manager, unsigned int id);
-int RESIZE_MEMORY(MemoryManager *manager, unsigned int id, size_t newSize);
-void DISPLAY_MEMORY_MAP(MemoryManager *manager);
-void DISPLAY_STATISTICS(MemoryManager *manager);
-void MENU(void);
-void ALLOCATE_OPERATION(MemoryManager *manager);
-int CHECK_EXTERNAL_FRAGMENTATION(MemoryManager *manager, size_t requestedSize);
-void RELEASE_OPERATION(MemoryManager *manager);
-void RESIZE_OPERATION(MemoryManager *manager);
-void CHANGE_STRATEGY(MemoryManager *manager);
-void DESTROY(MemoryManager *manager);
+int readInteger(char message[]);
+int ensureCapacity(MemoryManager *manager);
+int insertBlock(MemoryManager *manager, size_t index, Block block);
+void removeBlock(MemoryManager *manager, size_t index);
+void mergeBlocks(MemoryManager *manager);
+int initialize(MemoryManager *manager, size_t totalSize, Strategy strategy);
+int findAllocation(MemoryManager *manager, unsigned int id);
+int findBlock(MemoryManager *manager, size_t size);
+int allocateMemory(MemoryManager *manager, size_t size, unsigned int *id);
+int releaseMemory(MemoryManager *manager, unsigned int id);
+int resizeMemory(MemoryManager *manager, unsigned int id, size_t newSize);
+void displayMemoryMap(MemoryManager *manager);
+void displayStatistics(MemoryManager *manager);
+void menu(void);
+void allocateOperation(MemoryManager *manager);
+int checkExternalFragmentation(MemoryManager *manager, size_t requestedSize);
+void releaseOperation(MemoryManager *manager);
+void resizeOperation(MemoryManager *manager);
+void changeStrategy(MemoryManager *manager);
+void destroy(MemoryManager *manager);
 
 
+int readInteger(char message[]) {
 
-int READ_INTEGER(char message[]) {
     int number;
     char extra;
 
     printf("%s", message);
 
-    if (scanf("%d%c", &number,&extra) != 2||extra!='\n') {
+    if (scanf("%d%c", &number, &extra) != 2 || extra != '\n') {
         printf("Invalid input.\n");
 
         while (getchar() != '\n');
@@ -73,8 +79,7 @@ int READ_INTEGER(char message[]) {
 }
 
 
-
-int ENSURE_CAPACITY(MemoryManager *manager) {
+int ensureCapacity(MemoryManager *manager) {
 
     if (manager->blockCount < manager->capacity)
         return 1;
@@ -104,14 +109,15 @@ int ENSURE_CAPACITY(MemoryManager *manager) {
     return 1;
 }
 
-int INSERT_BLOCK(MemoryManager *manager, size_t index, Block block) {
 
-    if (index > manager->blockCount || !ENSURE_CAPACITY(manager))
+int insertBlock(MemoryManager *manager, size_t index, Block block) {
+
+    if (index > manager->blockCount || !ensureCapacity(manager))
         return 0;
 
     for (size_t i = manager->blockCount; i > index; i--) {
-    manager->blocks[i] = manager->blocks[i - 1];
-}
+        manager->blocks[i] = manager->blocks[i - 1];
+    }
 
     manager->blocks[index] = block;
     manager->blockCount++;
@@ -119,19 +125,21 @@ int INSERT_BLOCK(MemoryManager *manager, size_t index, Block block) {
     return 1;
 }
 
-void REMOVE_BLOCK(MemoryManager *manager, size_t index) {
+
+void removeBlock(MemoryManager *manager, size_t index) {
 
     if (index >= manager->blockCount)
         return;
 
     for (size_t i = index; i < manager->blockCount - 1; i++) {
-    manager->blocks[i] = manager->blocks[i + 1];
-}
+        manager->blocks[i] = manager->blocks[i + 1];
+    }
 
     manager->blockCount--;
 }
 
-void MERGE_BLOCKS(MemoryManager *manager) {
+
+void mergeBlocks(MemoryManager *manager) {
 
     size_t i = 0;
 
@@ -143,7 +151,7 @@ void MERGE_BLOCKS(MemoryManager *manager) {
         if (current->status == FREE && next->status == FREE) {
 
             current->size += next->size;
-            REMOVE_BLOCK(manager, i + 1);
+            removeBlock(manager, i + 1);
 
         } else {
             i++;
@@ -152,7 +160,7 @@ void MERGE_BLOCKS(MemoryManager *manager) {
 }
 
 
-int INITIALIZE(
+int initialize(
     MemoryManager *manager,
     size_t totalSize,
     Strategy strategy
@@ -185,8 +193,7 @@ int INITIALIZE(
 }
 
 
-
-int FIND_ALLOCATION(MemoryManager *manager, unsigned int id) {
+int findAllocation(MemoryManager *manager, unsigned int id) {
 
     for (size_t i = 0; i < manager->blockCount; i++) {
 
@@ -198,7 +205,8 @@ int FIND_ALLOCATION(MemoryManager *manager, unsigned int id) {
     return -1;
 }
 
-int FIND_BLOCK(MemoryManager *manager, size_t size) {
+
+int findBlock(MemoryManager *manager, size_t size) {
 
     int selected = -1;
 
@@ -228,7 +236,12 @@ int FIND_BLOCK(MemoryManager *manager, size_t size) {
 
     return selected;
 }
-int CHECK_EXTERNAL_FRAGMENTATION(MemoryManager *manager, size_t requestedSize) {
+
+
+int checkExternalFragmentation(
+    MemoryManager *manager,
+    size_t requestedSize
+) {
 
     size_t totalFree = 0;
     size_t largestFree = 0;
@@ -252,7 +265,7 @@ int CHECK_EXTERNAL_FRAGMENTATION(MemoryManager *manager, size_t requestedSize) {
 }
 
 
-int ALLOCATE_MEMORY(
+int allocateMemory(
     MemoryManager *manager,
     size_t size,
     unsigned int *id
@@ -262,7 +275,7 @@ int ALLOCATE_MEMORY(
         manager->nextId == 0)
         return 0;
 
-    int index = FIND_BLOCK(manager, size);
+    int index = findBlock(manager, size);
 
     if (index == -1)
         return 0;
@@ -285,7 +298,7 @@ int ALLOCATE_MEMORY(
             ALLOCATED
         };
 
-        if (!INSERT_BLOCK(manager, index, newBlock))
+        if (!insertBlock(manager, index, newBlock))
             return 0;
 
         manager->blocks[index + 1].start += size;
@@ -302,9 +315,10 @@ int ALLOCATE_MEMORY(
     return 1;
 }
 
-int RELEASE_MEMORY(MemoryManager *manager, unsigned int id) {
 
-    int index = FIND_ALLOCATION(manager, id);
+int releaseMemory(MemoryManager *manager, unsigned int id) {
+
+    int index = findAllocation(manager, id);
 
     if (index == -1)
         return 0;
@@ -312,20 +326,19 @@ int RELEASE_MEMORY(MemoryManager *manager, unsigned int id) {
     manager->blocks[index].status = FREE;
     manager->blocks[index].id = 0;
 
-    MERGE_BLOCKS(manager);
+    mergeBlocks(manager);
 
     return 1;
 }
 
 
-
-int RESIZE_MEMORY(
+int resizeMemory(
     MemoryManager *manager,
     unsigned int id,
     size_t newSize
 ) {
 
-    int index = FIND_ALLOCATION(manager, id);
+    int index = findAllocation(manager, id);
 
     if (index == -1 || newSize == 0 ||
         newSize > manager->totalSize)
@@ -337,7 +350,6 @@ int RESIZE_MEMORY(
     if (newSize == oldSize)
         return 1;
 
-    
 
     if (newSize < oldSize) {
 
@@ -348,17 +360,16 @@ int RESIZE_MEMORY(
             FREE
         };
 
-        if (!INSERT_BLOCK(manager, index + 1, freeBlock))
+        if (!insertBlock(manager, index + 1, freeBlock))
             return 0;
 
         manager->blocks[index].size = newSize;
 
-        MERGE_BLOCKS(manager);
+        mergeBlocks(manager);
 
         return 1;
     }
 
-    
 
     size_t extraSize = newSize - oldSize;
 
@@ -374,33 +385,32 @@ int RESIZE_MEMORY(
             next->size -= extraSize;
 
             if (next->size == 0)
-                REMOVE_BLOCK(manager, index + 1);
+                removeBlock(manager, index + 1);
 
             return 1;
         }
     }
 
-    
 
     unsigned int newId;
 
-    if (!ALLOCATE_MEMORY(manager, newSize, &newId))
+    if (!allocateMemory(manager, newSize, &newId))
         return 0;
 
-    int newIndex = FIND_ALLOCATION(manager, newId);
+    int newIndex = findAllocation(manager, newId);
 
     if (newIndex == -1)
         return 0;
 
-   for (size_t i = 0; i < oldSize; i++) {
-    manager->buffer[manager->blocks[newIndex].start + i] =
-        manager->buffer[oldStart + i];
-}
+    for (size_t i = 0; i < oldSize; i++) {
+        manager->buffer[manager->blocks[newIndex].start + i] =
+            manager->buffer[oldStart + i];
+    }
 
-    if (!RELEASE_MEMORY(manager, id))
+    if (!releaseMemory(manager, id))
         return 0;
 
-    newIndex = FIND_ALLOCATION(manager, newId);
+    newIndex = findAllocation(manager, newId);
 
     if (newIndex == -1)
         return 0;
@@ -411,8 +421,7 @@ int RESIZE_MEMORY(
 }
 
 
-
-void DISPLAY_MEMORY_MAP(MemoryManager *manager) {
+void displayMemoryMap(MemoryManager *manager) {
 
     printf("\n--------- MEMORY MAP ---------\n");
 
@@ -434,12 +443,10 @@ void DISPLAY_MEMORY_MAP(MemoryManager *manager) {
             printf("Status       : FREE\n");
         }
     }
-
-    
 }
 
 
-void DISPLAY_STATISTICS(MemoryManager *manager) {
+void displayStatistics(MemoryManager *manager) {
 
     size_t used = 0;
     size_t freeMemory = 0;
@@ -477,7 +484,7 @@ void DISPLAY_STATISTICS(MemoryManager *manager) {
 }
 
 
-void MENU(void) {
+void menu(void) {
 
     printf("\nMenu:\n");
     printf("1. Allocate memory\n");
@@ -490,16 +497,16 @@ void MENU(void) {
 }
 
 
-void ALLOCATE_OPERATION(MemoryManager *manager) {
+void allocateOperation(MemoryManager *manager) {
 
-    int size = READ_INTEGER("Requested size: ");
+    int size = readInteger("Requested size: ");
 
     unsigned int id;
 
     if (size > 0 &&
-        ALLOCATE_MEMORY(manager, (size_t)size, &id)) {
+        allocateMemory(manager, (size_t)size, &id)) {
 
-        int index = FIND_ALLOCATION(manager, id);
+        int index = findAllocation(manager, id);
 
         printf(
             "Allocation successful. ID: %u, Start: %zu, Size: %zu\n",
@@ -511,7 +518,7 @@ void ALLOCATE_OPERATION(MemoryManager *manager) {
     } else {
 
         if (size > 0 &&
-            CHECK_EXTERNAL_FRAGMENTATION(manager, (size_t)size)) {
+            checkExternalFragmentation(manager, (size_t)size)) {
 
             printf("Allocation failed due to external fragmentation.\n");
 
@@ -523,11 +530,11 @@ void ALLOCATE_OPERATION(MemoryManager *manager) {
 }
 
 
-void RELEASE_OPERATION(MemoryManager *manager) {
+void releaseOperation(MemoryManager *manager) {
 
-    int id = READ_INTEGER("Allocation ID: ");
+    int id = readInteger("Allocation ID: ");
 
-    if (id > 0 && RELEASE_MEMORY(manager, (unsigned int)id)) {
+    if (id > 0 && releaseMemory(manager, (unsigned int)id)) {
 
         printf("Allocation released.\n");
 
@@ -538,14 +545,13 @@ void RELEASE_OPERATION(MemoryManager *manager) {
 }
 
 
+void resizeOperation(MemoryManager *manager) {
 
-void RESIZE_OPERATION(MemoryManager *manager) {
-
-    int id = READ_INTEGER("Allocation ID: ");
-    int size = READ_INTEGER("Requested new size: ");
+    int id = readInteger("Allocation ID: ");
+    int size = readInteger("Requested new size: ");
 
     if (id > 0 && size > 0 &&
-        RESIZE_MEMORY(manager, (unsigned int)id, (size_t)size)) {
+        resizeMemory(manager, (unsigned int)id, (size_t)size)) {
 
         printf("Allocation resized successfully.\n");
 
@@ -556,13 +562,13 @@ void RESIZE_OPERATION(MemoryManager *manager) {
 }
 
 
-void CHANGE_STRATEGY(MemoryManager *manager) {
+void changeStrategy(MemoryManager *manager) {
 
     printf("\n1. First Fit\n");
     printf("2. Best Fit\n");
     printf("3. Worst Fit\n");
 
-    int choice = READ_INTEGER("Select allocation strategy: ");
+    int choice = readInteger("Select allocation strategy: ");
 
     if (choice >= FIRST_FIT && choice <= WORST_FIT) {
 
@@ -577,7 +583,7 @@ void CHANGE_STRATEGY(MemoryManager *manager) {
 }
 
 
-void DESTROY(MemoryManager *manager) {
+void destroy(MemoryManager *manager) {
 
     free(manager->buffer);
     free(manager->blocks);
@@ -595,9 +601,9 @@ int main(void) {
 
     MemoryManager manager = {0};
 
-    int totalSize = READ_INTEGER("Enter memory pool size: ");
+    int totalSize = readInteger("Enter memory pool size: ");
 
-    if (totalSize <= 0 || totalSize>MAX_SIZE){
+    if (totalSize <= 0 || totalSize > MAX_SIZE) {
 
         printf("Invalid memory pool size.\n");
         return 1;
@@ -608,7 +614,7 @@ int main(void) {
         "(1. First Fit, 2. Best Fit, 3. Worst Fit): "
     );
 
-    int choice = READ_INTEGER("");
+    int choice = readInteger("");
 
     if (choice < FIRST_FIT || choice > WORST_FIT) {
 
@@ -616,7 +622,7 @@ int main(void) {
         return 1;
     }
 
-    if (!INITIALIZE(
+    if (!initialize(
         &manager,
         (size_t)totalSize,
         (Strategy)choice
@@ -637,34 +643,34 @@ int main(void) {
 
     do {
 
-        MENU();
+        menu();
 
-        menuChoice = READ_INTEGER("\nChoice: ");
+        menuChoice = readInteger("\nChoice: ");
 
         switch (menuChoice) {
 
             case 1:
-                ALLOCATE_OPERATION(&manager);
+                allocateOperation(&manager);
                 break;
 
             case 2:
-                RELEASE_OPERATION(&manager);
+                releaseOperation(&manager);
                 break;
 
             case 3:
-                RESIZE_OPERATION(&manager);
+                resizeOperation(&manager);
                 break;
 
             case 4:
-                DISPLAY_MEMORY_MAP(&manager);
+                displayMemoryMap(&manager);
                 break;
 
             case 5:
-                DISPLAY_STATISTICS(&manager);
+                displayStatistics(&manager);
                 break;
 
             case 6:
-                CHANGE_STRATEGY(&manager);
+                changeStrategy(&manager);
                 break;
 
             case 7:
@@ -677,7 +683,7 @@ int main(void) {
 
     } while (menuChoice != 7);
 
-    DESTROY(&manager);
+    destroy(&manager);
 
     return 0;
 }
